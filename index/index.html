@@ -1,154 +1,334 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reconhecimento - Rebeca</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Detector de Emoções</title>
 
-    <!-- Estilo customizado -->
-    <style>
-        body {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        .card-custom {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
+    body {
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ffe1f0, #dcecff);
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        .btn-camera {
-            background: linear-gradient(45deg, #00c6ff, #0072ff);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-weight: bold;
-            color: white;
-            transition: 0.3s;
-        }
+    .app {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+    }
 
-        .btn-camera:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #7c3aed;
+    }
 
-        canvas {
-            border-radius: 15px;
-            width: 100% !important;
-            height: auto !important;
-        }
+    .subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
 
-        .progress {
-            height: 20px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 7px 12px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
 
-        .label-text {
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-    </style>
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9ca3af;
+    }
+
+    .status.active {
+      color: #047857;
+      background: #ecfdf5;
+    }
+
+    .status.active .status-dot {
+      background: #10b981;
+    }
+
+    #webcam-container {
+      width: 260px;
+      height: 260px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      background: #f3e8ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: #7c3aed;
+      font-weight: bold;
+    }
+
+    #webcam-container canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 13px;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(124, 58, 237, 0.25);
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .main-result {
+      background: #f9fafb;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .main-result small {
+      display: block;
+      color: #6b7280;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .emotion {
+      font-size: 30px;
+      font-weight: bold;
+      color: #7c3aed;
+    }
+
+    .confidence {
+      font-size: 17px;
+      color: #ec4899;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    #label-container {
+      display: grid;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .prediction {
+      background: #f3f4f6;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    .prediction.active {
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      color: white;
+      font-weight: bold;
+    }
+
+    .note {
+      margin-top: 16px;
+      color: #6b7280;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 420px) {
+      .app {
+        padding: 20px;
+      }
+
+      #webcam-container {
+        width: 230px;
+        height: 230px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
-    <div class="card-custom text-center">
+  <main class="app">
+    <h1>Detector de Emoções</h1>
 
-        <h2 class="mb-3">👁️ Reconhecimento</h2>
-        <p class="mb-4">Clique no botão para ativar a câmera</p>
+    <p class="subtitle">
+      Permita o uso da câmera e mostre uma expressão facial para o sistema analisar.
+    </p>
 
-        <button class="btn btn-camera mb-4" onclick="init()">🎥 Ativar Câmera</button>
-
-        <div id="webcam-container" class="mb-4"></div>
-
-        <div id="label-container" class="text-start"></div>
-
+    <div class="status" id="status">
+      <span class="status-dot"></span>
+      <span id="status-text">Aguardando início</span>
     </div>
-</div>
 
-<!-- TensorFlow + Teachable Machine -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <div id="webcam-container">
+      Câmera
+    </div>
 
-<script>
-    const URL = "./my_model/";
+    <button id="startBtn" type="button">
+      Iniciar câmera
+    </button>
 
-    let model, webcam, labelContainer, maxPredictions;
+    <section class="main-result">
+      <small>Emoção detectada</small>
+      <div class="emotion" id="mainEmotion">--</div>
+      <div class="confidence" id="mainConfidence">0%</div>
+    </section>
+
+    <div id="label-container"></div>
+
+    <p class="note">
+      Este projeto usa um modelo treinado no Teachable Machine para reconhecer padrões visuais.
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+  <script>
+    const URL = "https://teachablemachine.withgoogle.com/models/ZM5k5nh0z/";
+
+    let model;
+    let webcam;
+    let maxPredictions;
+    let labelContainer;
+
+    const startBtn = document.getElementById("startBtn");
+    const statusBox = document.getElementById("status");
+    const statusText = document.getElementById("status-text");
+    const webcamContainer = document.getElementById("webcam-container");
+    const mainEmotion = document.getElementById("mainEmotion");
+    const mainConfidence = document.getElementById("mainConfidence");
+
+    startBtn.addEventListener("click", init);
 
     async function init() {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+      startBtn.disabled = true;
+      startBtn.innerText = "Carregando...";
+      setStatus("Carregando modelo", false);
 
-        model = await tmImage.load(modelURL, metadataURL);
+      try {
+        model = await tmImage.load(
+          URL + "model.json",
+          URL + "metadata.json"
+        );
+
         maxPredictions = model.getTotalClasses();
 
-        const flip = true;
-        webcam = new tmImage.Webcam(300, 300, flip);
+        webcam = new tmImage.Webcam(260, 260, true);
         await webcam.setup();
         await webcam.play();
-        window.requestAnimationFrame(loop);
 
-        document.getElementById("webcam-container").innerHTML = "";
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        webcamContainer.innerHTML = "";
+        webcamContainer.appendChild(webcam.canvas);
 
         labelContainer = document.getElementById("label-container");
         labelContainer.innerHTML = "";
 
         for (let i = 0; i < maxPredictions; i++) {
-            const wrapper = document.createElement("div");
-
-            const label = document.createElement("div");
-            label.className = "label-text";
-
-            const progress = document.createElement("div");
-            progress.className = "progress";
-
-            const progressBar = document.createElement("div");
-            progressBar.className = "progress-bar progress-bar-striped progress-bar-animated";
-            progressBar.style.width = "0%";
-
-            progress.appendChild(progressBar);
-            wrapper.appendChild(label);
-            wrapper.appendChild(progress);
-
-            labelContainer.appendChild(wrapper);
+          const item = document.createElement("div");
+          item.className = "prediction";
+          item.innerText = "-";
+          labelContainer.appendChild(item);
         }
+
+        startBtn.innerText = "Câmera ativa";
+        setStatus("Câmera ativa", true);
+
+        window.requestAnimationFrame(loop);
+      } catch (error) {
+        console.error(error);
+        startBtn.disabled = false;
+        startBtn.innerText = "Tentar novamente";
+        setStatus("Erro ao iniciar", false);
+        alert("Não foi possível iniciar. Verifique a permissão da câmera e tente novamente.");
+      }
     }
 
     async function loop() {
-        webcam.update();
-        await predict();
-        window.requestAnimationFrame(loop);
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
     }
 
     async function predict() {
-        const prediction = await model.predict(webcam.canvas);
+      const prediction = await model.predict(webcam.canvas);
 
-        for (let i = 0; i < maxPredictions; i++) {
-            const prob = prediction[i].probability;
-            const percent = (prob * 100).toFixed(1);
+      let highestIndex = 0;
 
-            const wrapper = labelContainer.childNodes[i];
-            const label = wrapper.childNodes[0];
-            const progressBar = wrapper.childNodes[1].childNodes[0];
-
-            label.innerHTML = `${prediction[i].className}: ${percent}%`;
-            progressBar.style.width = percent + "%";
+      prediction.forEach((item, index) => {
+        if (item.probability > prediction[highestIndex].probability) {
+          highestIndex = index;
         }
+      });
+
+      prediction.forEach((item, index) => {
+        const percent = item.probability * 100;
+        const row = labelContainer.children[index];
+
+        row.innerText = `${item.className}: ${percent.toFixed(1)}%`;
+        row.classList.remove("active");
+
+        if (index === highestIndex) {
+          row.classList.add("active");
+        }
+      });
+
+      mainEmotion.innerText = prediction[highestIndex].className;
+      mainConfidence.innerText =
+        (prediction[highestIndex].probability * 100).toFixed(1) + "%";
     }
-</script>
+
+    function setStatus(text, active) {
+      statusText.innerText = text;
+      statusBox.classList.toggle("active", active);
+    }
+  </script>
 
 </body>
 </html>
